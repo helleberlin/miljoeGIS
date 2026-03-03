@@ -1,56 +1,45 @@
-#### R script for the project ####
-# Remove  all objects from R memory 
-rm(list=ls())  
+# indlæs R pakker
+packages <- c( "car","sandwich","lmtest","RColorBrewer","mgcv","foreign","xtable"
+  ,"AER","stargazer", "MASS", "tidyverse", "dplyr","tidyr","sf" )
+lapply( packages, require, character.only = T )
+rm( packages )
 
-# Set a path to the library containing packages
-.libPaths("C:/Users/helle/OneDrive/Desktop/packages/packages")
+# indlæs data
+if ( Sys.info()["sysname"] == "Windows" ) {
+  ## Helle
+  # sæt vej to bibliotek der indeholder pakker
+  .libPaths("C:/Users/helle/OneDrive/Desktop/packages/packages")
+  # tjek hvilke biblioteks veje er indlæst
+  .libPaths()
+  # check arbejds biblioteks vejen 
+  getwd()
+  # indlæs gis data
+  mark <- st_read( "C:/Users/helle/OneDrive/Desktop/miljoeGIS/dat_raw/Marker_2024.shp" ) 
+} else if ( Sys.info()["sysname"] == "Darwin" ) {
+  ## William
+  # indlæs gis data
+  mark <- st_read( "/Users/William/Desktop/miljoeGIS/dat_raw/Marker_2024.shp" ) 
+}
 
-# Check which library paths are loaded
-.libPaths()
 
-# Load selected packages# 
-pack<-c("car","sandwich","lmtest","RColorBrewer","mgcv","foreign","xtable"
-        ,"AER","stargazer", "MASS", "tidyverse", "dplyr","tidyr","sf")
+#### Overblik over afgrøder fra marker ####
 
-lapply(pack, require, character.only=T)
-
-# Check the working path
-getwd()
-
-# Specify  paths
-data_path<-"C:/Users/helle/OneDrive/Desktop/MiljoeGIS/dat_raw"
-
-
-# Set working path
-setwd(data_path)
-
-#Check the directory
-dir()
-
-mark <- st_read("Marker_2024.shp")
-
-tail(mark) #shows the last observations in the dataset
-
-# Overblik over afgrøder fra marker
-
-navne <- unique(mark$Afgroede)  # Unikke crops navne
-navne
-
+head(mark) # viser de første observationer (marker) i datasættet
+tail(mark) # viser de første observationer (marker) i datasættet
+unique(mark$Afgroede)  # Unikke crops navne
 names(mark)   # Navnene på variablerne
 nrow(mark)    # Antal rækker= 617954
 ncol(mark)  # Antal kolonner
 
-###############################################################################
-# formatering af sprog
-###############################################################################
+
+#### formatering af sprog/bogstaver ####
 
 #3 fordi R har indlæst filen "crops" som noget forkert, skal vi arbejde lidt mere med denne fil:
 
 # Convert encoding from Latin-1 (Windows-1252) to UTF-8 safely - R sprog: crops1$AfgNavn <- iconv(crops1$AfgNavn, from = "latin1", to = "UTF-8")
 
-## Fjerne æ, ø og å
 
-# 1. lave en funktion der ersatter alle æ ø og å med ae, o og aa
+# lav en funktion der ersatter alle "æ" "ø" og "å" med "ae", "o" og "aa"
 replace_danske_tegn <- function(x) {
   x <- gsub("Æ", "Ae", x, fixed = TRUE)
   x <- gsub("æ", "ae", x, fixed = TRUE)
@@ -65,27 +54,43 @@ mark <- mark %>%
     Afgroede = iconv(Afgroede, from = "latin1", to ="UTF-8")
   )
 
-navne <- unique(mark$Afgroede)
-navne
+# tjek 'Afgroede'navne
+unique( mark$Afgroede ) # unique() bruges til overblik over unikke navne
 
-#############################################################################
-## 3. Ordne data
-###############################################################################
+
+
+#### ordne data ####
+
 ## Undersøge NA
+colSums( is.na( mark ) )  # tæller manglende værdier for hver variabel i datasættet
 
-colSums(is.na(mark))  # Counts the NA´s in the dataset
-
+# fjerner manglende værdier 
 mark1 <- mark %>%
-  filter(if_all(everything(), ~ !is.na(.)))
-
-colSums(is.na(mark1))  # Counts the NA´s in the dataset
-
+  filter( if_all( everything(), ~ !is.na(.) ) )
+colSums( is.na (mark1 ) ) 
 nrow(mark1)    # 587454 rækker
+unique(mark1$Afgroede)
 
-navne <- unique(mark1$Afgroede) # unique() bruges til overblik over unikke navne
+# Frasortér afgrøder med mindre end 10 ha
+mark2 <- mark1 %>%
+  group_by(Afgroede) %>%
+  filter(sum(IMK_areal, na.rm = TRUE) >= 10) %>%  
+  ungroup() 
 
-navne  # 301 unikke afgrødekategorier
+unique(mark2$Afgroede) # 260 unikke afgrødekategorier
 
+
+#### ordne afgrødekategori (afgroede) efter størrelse ####
+
+# Lav en midlertidig version uden geometrien
+mark2_ingengeo <- st_set_geometry( mark2, NULL )
+
+afgroede_sorteret <- mark2_ingengeo %>%
+  group_by( Afgroede ) %>%
+  summarise( total_areal = sum( IMK_areal, na.rm = TRUE ) ) %>%
+  arrange( desc( total_areal ) )
+
+afgroede_sorteret
 
 #############################################################################
 ## kategorisering af miljøGis data efter produktions grene
