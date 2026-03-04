@@ -24,6 +24,18 @@ if ( Sys.info()["sysname"] == "Windows" ) {
 }
 
 
+#### udvælg kystvande ####
+
+kyst7 <- subset( kyst, KystvandID == "111" | KystvandID == "136" | 
+    KystvandID == "235" | KystvandID == "232" | KystvandID == "236" |
+    KystvandID == "165" | KystvandID == "35" )
+
+
+#### lav samlet datasæt ####
+
+dat <- st_intersection( mark, kyst7 )
+str( dat )
+
 #### Overblik over afgrøder fra marker ####
 
 head(mark) # viser de første observationer (marker) i datasættet
