@@ -47,3 +47,18 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+
+# Large spatial files (optional)
+*.shp
+*.dbf
+*.shx
+*.cpg
+*.prj
+
+# Excel / CSV outputs (optional)
+*.xlsx
+*.csv
+
+# macOS
+.DS_Store
