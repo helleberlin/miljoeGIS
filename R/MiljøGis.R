@@ -1,6 +1,6 @@
 # indlæs R pakker
 packages <- c( "car","sandwich","lmtest","RColorBrewer","mgcv","foreign","xtable"
-  ,"AER","stargazer", "MASS", "tidyverse", "dplyr","tidyr","sf" )
+  ,"AER","stargazer", "MASS", "tidyverse", "dplyr","tidyr","sf", "writexl" )
 lapply( packages, require, character.only = T )
 rm( packages )
 
@@ -38,12 +38,12 @@ str( dat )
 
 #### Overblik over afgrøder fra marker ####
 
-head(mark) # viser de første observationer (marker) i datasættet
-tail(mark) # viser de første observationer (marker) i datasættet
-unique(mark$Afgroede)  # Unikke crops navne
-names(mark)   # Navnene på variablerne
-nrow(mark)    # Antal rækker= 617954
-ncol(mark)  # Antal kolonner
+head(dat) # viser de første observationer (marker) i datasættet
+tail(dat) # viser de første observationer (marker) i datasættet
+unique(dat$Afgroede)  # Unikke crops navne
+names(dat)   # Navnene på variablerne
+nrow(dat)    # Antal rækker= 617954
+ncol(dat)  # Antal kolonner
 
 
 #### formatering af sprog/bogstaver ####
@@ -63,48 +63,66 @@ replace_danske_tegn <- function(x) {
   x <- gsub("å", "aa", x, fixed = TRUE)
   x
 }
-mark <- mark %>%
+dat <- dat %>%
   mutate(
     Afgroede = iconv(Afgroede, from = "latin1", to ="UTF-8")
   )
 
 # tjek 'Afgroede'navne
-unique( mark$Afgroede ) # unique() bruges til overblik over unikke navne
+unique( dat$Afgroede ) # unique() bruges til overblik over unikke navne
 
 
 
 #### ordne data ####
 
 ## Undersøge NA
-colSums( is.na( mark ) )  # tæller manglende værdier for hver variabel i datasættet
+colSums( is.na( dat ) )  # tæller manglende værdier for hver variabel i datasættet
 
 # fjerner manglende værdier 
-mark1 <- mark %>%
+dat1 <- dat %>%
   filter( if_all( everything(), ~ !is.na(.) ) )
-colSums( is.na (mark1 ) ) 
-nrow(mark1)    # 587454 rækker
-unique(mark1$Afgroede)
+colSums( is.na (dat1 ) ) 
+nrow(dat1)    # 587454 rækker
+unique(dat1$Afgroede)
+
+# tjek det 'renset' datasæt inden fravalg af marker under 10 hektar
+afgroede_sorteret
+length( unique( dat2$CVR ) )
 
 # Frasortér afgrøder med mindre end 10 ha
-mark2 <- mark1 %>%
+dat2 <- dat1 %>%
   group_by(Afgroede) %>%
   filter(sum(IMK_areal, na.rm = TRUE) >= 10) %>%  
   ungroup() 
 
-unique(mark2$Afgroede) # 260 unikke afgrødekategorier
+unique(dat2$Afgroede) # 260 unikke afgrødekategorier
 
 
 #### ordne afgrødekategori (afgroede) efter størrelse ####
 
 # Lav en midlertidig version uden geometrien
-mark2_ingengeo <- st_set_geometry( mark2, NULL )
+dat2_ingengeo <- st_set_geometry( dat2, NULL )
 
-afgroede_sorteret <- mark2_ingengeo %>%
+afgroede_sorteret <- dat2_ingengeo %>%
   group_by( Afgroede ) %>%
   summarise( total_areal = sum( IMK_areal, na.rm = TRUE ) ) %>%
   arrange( desc( total_areal ) )
 
-afgroede_sorteret
+# beregn areal andelene i procent
+afgroede_sorteret <- afgroede_sorteret %>%
+  mutate(
+    total_share = total_areal / sum(total_areal) * 100
+  )
+
+# lav datasæt med oversigt over de 'vigtigste' afgrøder
+if ( Sys.info()["sysname"] == "Windows" ) {
+  # Helle
+  write_xlsx( afgroede_sorteret, "C:/Users/helle/OneDrive/Desktop/miljoeGIS/dat_processed/afgroede_sorteret.xlsx" )
+} else if ( Sys.info()["sysname"] == "Darwin" ) {
+  # William
+  write_xlsx( afgroede_sorteret, "/Users/William/Desktop/miljoeGIS/dat_processed/afgroede_sorteret.xlsx" )
+}
+
 
 #############################################################################
 ## kategorisering af miljøGis data efter produktions grene
