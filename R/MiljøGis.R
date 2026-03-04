@@ -15,10 +15,12 @@ if ( Sys.info()["sysname"] == "Windows" ) {
   getwd()
   # indlæs gis data
   mark <- st_read( "C:/Users/helle/OneDrive/Desktop/miljoeGIS/dat_raw/Marker_2024.shp" ) 
+  kyst <- st_read( "C:/Users/helle/OneDrive/Desktop/miljoeGIS/dat_raw/Kystvandoplande_VP3_2024.shp" )
 } else if ( Sys.info()["sysname"] == "Darwin" ) {
   ## William
   # indlæs gis data
   mark <- st_read( "/Users/William/Desktop/miljoeGIS/dat_raw/Marker_2024.shp" ) 
+  kyst <- st_read( "/Users/William/Desktop/miljoeGIS/dat_raw/Kystvandoplande_VP3_2024.shp" )
 }
 
 
