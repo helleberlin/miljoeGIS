@@ -31,6 +31,7 @@ kyst7 <- subset( kyst, KystvandID == "111" | KystvandID == "136" |
     KystvandID == "165" | KystvandID == "35" )
 
 
+
 #### lav samlet datasæt ####
 
 dat <- st_intersection( mark, kyst7 )
@@ -40,15 +41,13 @@ str( dat )
 
 head(dat) # viser de første observationer (marker) i datasættet
 tail(dat) # viser de første observationer (marker) i datasættet
-unique(dat$Afgroede)  # Unikke crops navne
-names(dat)   # Navnene på variablerne
+unique(dat$Afgroede)  # Unikke afgrødenavne
+names(dat)   # Navnene på variablene
 nrow(dat)    # Antal rækker= 617954
 ncol(dat)  # Antal kolonner
 
 
 #### formatering af sprog/bogstaver ####
-
-#3 fordi R har indlæst filen "crops" som noget forkert, skal vi arbejde lidt mere med denne fil:
 
 # Convert encoding from Latin-1 (Windows-1252) to UTF-8 safely - R sprog: crops1$AfgNavn <- iconv(crops1$AfgNavn, from = "latin1", to = "UTF-8")
 
@@ -68,9 +67,11 @@ dat <- dat %>%
     Afgroede = iconv(Afgroede, from = "latin1", to ="UTF-8")
   )
 
+
+
 # tjek 'Afgroede'navne
 unique( dat$Afgroede ) # unique() bruges til overblik over unikke navne
-
+unique( dat$KystvandNa)
 
 
 #### ordne data ####
@@ -82,12 +83,9 @@ colSums( is.na( dat ) )  # tæller manglende værdier for hver variabel i datas�
 dat1 <- dat %>%
   filter( if_all( everything(), ~ !is.na(.) ) )
 colSums( is.na (dat1 ) ) 
-nrow(dat1)    # 587454 rækker
+nrow(dat1)    # 142985 rækker
 unique(dat1$Afgroede)
 
-# tjek det 'renset' datasæt inden fravalg af marker under 10 hektar
-afgroede_sorteret
-length( unique( dat2$CVR ) )
 
 # Frasortér afgrøder med mindre end 10 ha
 dat2 <- dat1 %>%
@@ -95,7 +93,7 @@ dat2 <- dat1 %>%
   filter(sum(IMK_areal, na.rm = TRUE) >= 10) %>%  
   ungroup() 
 
-unique(dat2$Afgroede) # 260 unikke afgrødekategorier
+unique(dat2$Afgroede) # 192 unikke afgrødekategorier
 
 
 #### ordne afgrødekategori (afgroede) efter størrelse ####
@@ -145,7 +143,7 @@ if ( Sys.info()["sysname"] == "Windows" ) {
     "Vinterhvede, brødhvede"
   )
   
- PG_4_Rug/Triticale <- c(
+ PG_4_Rug_Triticale <- c(
     "Vintertriticale",
     "Vårtriticale",
     "Vinterrug",
@@ -158,341 +156,243 @@ if ( Sys.info()["sysname"] == "Windows" ) {
     "Vinterhavre"
   )
   
-  PG_6_Majs <- c(
-    "Majs til modenhed",
-    "Majs til modenhed med græsudlæg"
+  PG_6_Sukkerroer_oa <- c ( "Sukkerroer til fabrik",
+                          "Korn + bælgsæd under 50% bælgsæd",
+                          "Blanding af vårsåede arter",
+                          "Blanding af efterårssæde arter",
+                          "Vårspelt",
+                          "Vinterspelt",
+                          "Boghvede",
+                          "Sorghum", "Græs, rullegræs"
   )
+
+
   
   PG_7_Frø <- c("Rajgræsfrø, alm.",
-                "Rajgræsfrø alm. 1. år, efterårsudlagt",
-                "Rajgræs, hybrid",
-                "Rajgræs, efterårsudl. hybrid","Rajgræsfro, ital.",
-                "Rajgræsfro, ital. 1. år efterårsudlagt","Hundegræsfrø",
-                "Engrapgræsfrø (marktype)", "Engrapsgræsfro (plænetype)",
-                "Rødsvingelfrø","Svingelfrø, bakke- (tidl. Stivbladet)",
-                "Svingelfrø, strand-","Engsvingelfrø","Timothefrø",
-                "Kløverfrø","Hvenefrø, alm. og krybende",
-                "Purløgsfrø", "Blomsterfrø",
-                "Blanding af markfrø til udsæd", "Rajsvingelfrø",
-                "Rajsvingelfrø, efterårsudlagt", "Spinatfrø", "Gulerodsfrø",
-                "Kålfro (hvid- og rødkål)", "Bederoefrø", "Bladbedefrø, rødbedefrø",
-                "Majroefrø", "Grønkålfrø", "Kinesisk kålfrø", "Olieræddike til frø, radisefrø",
-                "Persillefrø","Dildfrø","Valmuefrø","Pastinakfrø","Kommenfrø","Timianfrø",
-                "Chrysanthemum Garland, frø", "Scorzonerrod/skorzonerrodfrø",
-                "Rucolafrø","Karsefrø", "Gulerodsfrø","Bælgplanter, frø",
-                "Blanding bredbladet afgrøde, frø/kerne")
+                "Rajgræsfrø, alm. 1. år, efterårsudlagt",
+                "Rajgræs, efterårsudl. hybrid",
+                "Rajsvingelfrø",
+                "Rajsvingelfrø, efterårsudlagt",
+                "Timothefrø",
+                "Rajgræsfrø, ital.",
+                "Rajgræsfrø, ital. 1. år efterårsudlagt",
+                "Hundegræsfrø",
+                "Engrapgræsfrø (marktype)",
+                "Rødsvingelfrø",
+                "Svingelfrø, bakke- (tidl. Stivbladet)",
+                "Svingelfrø, strand-",
+                "Engsvingelfrø",
+                "Kløverfrø",
+                "Spinatfrø",
+                "Olieræddike til frø, radisefrø",
+                "Blanding af markfrø til udsæd",
+                "Purløgsfrø",
+                "Chrysanthemum Garland, frø",
+                "Engrapsgræsfrø (plænetype)",
+                "Hvenefrø, alm. og krybende",
+                "Dildfrø",
+                "Rapgræsfrø, alm.",
+                "Blomsterfrø",
+                "Rajgræs, hybrid"
+                )
   
- PG_8_Sukkerroer <-c(
-    "Sukkerroer til fabrik"
+  PG_8_Kartofler <- c ("Kartofler, spise- (pakkeri, vejsalg)",
+                      "Kartofler, spise- tidligt høstede med efterafgrøder",
+                      "Kartofler, friteret/chips/pommes frites",
+                      "Kartofler, stivelses-",
+                      "Kartofler, pulver/granules-",
+                      "Kartofler, laegge- (certificerede)",
+                      "Kartofler, lægge- (egen opformering)"
+                      
   )
+  
+  PG_9_Raps_oa <- c("Vinterraps", 
+                    "Vårraps", 
+                    "Solsikke",
+                  "Oliehør",
+                  "Gul sennep"
+                  )
  
- PG_9_Spisekartofler <- c( "Kartofler, spise- (pakkeri, vejsalg)",
-                           "Kartofler, spise- (proces, skrællet kogte)",
-                           "Kartofler, spise- tidligt høstede med efterafgrøder")
   
-  PG_10_Industrikartofler <- c("Kartofler, friteret/chips/pommes frites", "Kartofler, stivelse-",
-                               "Kartofler, pulver/granules-")
+  PG_10_Bælgsæd <- c( "Hestebønner",
+                      "Ærter",
+                      "Korn og bælgsæd (over 50 % bælgsæd)",
+                      "Lupin",
+                      "Bælgsæd blanding",
+                      "Sojabønner" 
+                      )
+  PG_11_sædskiftegræs <- c ("Græs med kløver/lucerne, under 50 % bælgpl. (omdrift)",
+             "Græs uden kløvergræs (omdrift)",
+             "Græs og kløvergræs uden norm, under 50 % kløver (omdrift)",
+             "Græs under 50% kløver/lucerne, lavt udbytte (omdrift)",
+             "Miljøgræs MVJ-tilsagn (0 N), omdrift",
+             "Græs under 50% kløver/lucerne, meget lavt udbytte (omdrift)",
+             "Kløvergræs, over 50% kløver (omdrift)",
+             "Græs under 50% kløver/lucerne, ekstremt lavt udbytte (omdrift)",
+             "Lucernegræs, over 25% græs til slæt inkl. eget foder",
+             "Græs til udegrise, omdrift",
+             "Græs til fabrik (omdrift)",
+             "Græs med kløver/lucerne, under 50 % bælgpl. (omdrift) efterårsudlagt i vinterkorn til grønkorn",
+             "Markbræmme, på omdrift, slåning",
+             "Græs og kløvergræs uden norm, over 50 % kløver (omdrift)",
+             "Lucernegræs, over 50% lucerne (omdrift)",
+             "Kløvergræs til fabrik",
+             "Lucerne, slæt",
+             "Kløver til slæt")
   
-  PG_11_Raps <- c("Vinterraps", "Vårraps", "Solsikke",
-                  "Oliehor",
-                  "Blanding af oliearter",
-                  "Gul sennep",
-                  "Rybs")
-  
-  PG_12_Hestebønner <-c("Hestebønner")
-  
-  PG_13_Ærter <- c("Ærter, konsum")
-  
-  PG_14_Andre_salgsafgrøder <- c(
-    "Blanding af vårsæde arter",
-    "Blanding af efterårssæde arter",
-    "Vårspelt",
-    "Vinterspelt",
-    "Boghvede",
-    "Quinoa",
-    "Sorghum",
-    "Korn + baelgsaed under 50% baelgsaed","Kartofler, laegge- (certificerede)",
-    "Kartofler, lægge- (egen opformering)", "Lupin", "Ærter",
-    "Kikærter", "Linser", "Sojabønner", "Bønner, andre", 
-    "Bælgsæd, andre typer til modenhed blanding", "Bælgsaed blanding", 
-    "Bælgsaed, flerårig blanding",
-    "Korn og bælgsæd (over 50 % bælgsæd)") # disse bør gennemgås 
+PG_12_Andet_Foder_Energi <-c("Vårbyg, helsæd",
+                             "Ærtehelsæd",
+                             "Korn og bælgsæd, helsæd, under 50% bælgsæd",
+                             "Vinterhvede, helsæd",
+                             "Vårhavre, helsæd",
+                             "Korn og bælgsæd, helsæd (over 50 % bælgsæd)",
+                             "Korn og bælgsæd, grønkorn, under 50% bælgsæd",
+                             "Blandkorn, vårsået, helsæd",
+                             "Vinterrug, helsæd",
+                             "Grønkorn af vårrug",
+                             "Grønkorn af vårbyg",
+                             "Grønkorn af vårhvede",
+                             "Grønkorn af vinterrug",
+                             "Grønkorn af vinterhvede",
+                             "Blanding af vårkorn, grønkorn",
+                             "Grønkorn af vårhavre",
+                             "Grønkorn af vinterbyg",
+                             "Fodersukkerroer",
+                             "Fodermarvkål",
+                             "Poppel",
+                             "Elefantgræs",
+                             "Lavskov",
+                             "Pil")
+
+PG_13_Vedvarendegræs <-c("Miljøgræs MVJ-tilsagn (0 N), permanent",
+                         "Permanent græs, normalt udbytte",
+                         "Permanent græs og kløvergræs uden norm, over 50 % kløver",
+                         "Permanent græs og kløvergræs uden norm, under 50 % kløver",
+                         "Permanent græs, lavt udbytte",
+                         "Permanent græs, meget lavt udbytte",
+                         "Permanent græs, uden kløver",
+                         "Permanent græs, under 50% kløver/lucerne",
+                         "Permanent kløvergræs, over 50% kløver/lucerne",
+                         "Græs til udegrise, permanent")
+
+   
+PG_14_Majs <- c(
+    "Majs til modenhed",
+    "Majs til modenhed med græsudlæg",
+    "Silomajs med græsudlæg",
+    "Silomajs")
+
+PG_15_Brak_Bræmmer <- c("Brak, slåning",
+                        "Bestøverbrak",
+                        "Blomsterbrak",
+                        "Brak langs vandløb og søer, slåning (alternativ til efterafgrøder)"
+                        )
+
+Fjernes <- c("MVJ ej udtagning, ej landbrugsareal",
+             "Miljøtiltag, ej landbrugsarealer",
+             "Anden skovdrift",
+             "Skovrejsning (privat) - forbedring af vandmiljø og grundvandsbeskyttelse",
+             "Rekreative formål",
+             "Skovrejsning, direktivimplementerende uden tilsagn ved Landbrugsstyrelsen",
+             "Skovrejsning (statslig) - forbedring af vandmiljø og grundvandsbeskyttelse",
+             "Skovrejsning på tidl. landbrugsjord 3",
+             "Skov med biodiversitetsformål",
+             "Bæredygtig skovdrift",
+             "Skovdrift med fjernelse af ved",
+             "Skovrejsning (privat) ? kulstofbinding og grundvandsbeskyttelse",
+             "Minivådområder, projekttilsagn",
+             "Skovlandbrug, ikke støtteberettiget",
+             "Ikke støtteberettiget landbrugsareal",
+             "Bæredygtig skovdrift i Natura 2000-område",
+             "Klimaskovrejsning, national ordning ej Landbrugsstyrelsen",
+             "Lysåbne arealer i skov",
+             "Lukket system",
+             "Naturarealer, økologisk jordbrug",
+             "Ærter, konsum",
+             "Gulerod",
+             "Løg",
+             "Salat (friland)",
+             "Blomkål",
+             "Centnergræskar",
+             "Broccoli",
+             "Grøntsager, blandinger",
+             "Rødbede",
+             "Spidskål",
+             "Sukkermajs",
+             "Rødkål",
+             "Porre",
+             "Asparges",
+             "Grøntsager, andre (friland)",
+             "Savoykål",
+             "Hvidkål",
+             "Knoldselleri",
+             "Grønkål",
+             "Æbler",
+             "Solbær",
+             "Vindrue",
+             "Sødkirsebær uden undervækst af græs",
+             "Ribs",
+             "Valnød (almindelig)",
+             "Hyld",
+             "Kastanje (ægte)",
+             "Hassel (Corylus maxima)",
+             "Anden træfrugt",
+             "Planteskolekulturer, vedplanter, til videresalg",
+             "Babyleaves",
+             "Planteskolekulturer, stauder",
+             "Hassel, træ (Corylus avellana)",
+             "Jordbær",
+             "Blandet frugt",
+             "Pastinak",
+             "Rodpersille",
+             "Rosenkål",
+             "Kinakål",
+             "Anden buskfrugt",
+             "Havtorn",
+             "Blomme med undervækst af græs",
+             "En- og to-årige planter",
+             "Tagetes, sygdomssanerende plante",
+             "Blåbær",
+             "Linser",
+             "Juletræer og pyntegrønt")
   
 
   
-  
-  "Græs/lucerne tørreri, ha" = c(
-    "Kløvergraes til fabrik",
-    "Græs til fabrik (omdrift)",
-    "Lucerne til fabrik",
-    "Permanent græs til fabrik",
-    "Permanent kløvergræs til fabrik",
-    "Permanent lucernegræs over 25% græs, til fabrik",
-    "Permanent græs, fabrik, over 6 tons"
-  ),
-  
-  "Andre industriafgrøder, ha" = c(
-    "Hamp",
-    "Humle",
-    "Blanding, andre industriafgr.",
-    "Tagetes, sygdomssanerende plante"
-  ),
-  
-  PG_15_Gartneri <- c(
-    "Salat (friland)",
-    "Salat (drivhus)",
-    "Grøntsager, blandinger",
-    "Grøntsager, andre (friland)",
-    "Grøntsager, andre (drivhus)",
-    "Gulerod",
-    "Knoldselleri",
-    "Pastinak",
-    "Rodpersille",
-    "Asparges",
-    "Rødbede",
-    "Asieagurker",
-    "Agurker",
-    "Tomater",
-    "Porre",
-    "Løg",
-    "Spinat",
-    "Babyleaves",
-    "Grønkål",
-    "Hvidkål",
-    "Savoykål",
-    "Spidskål",
-    "Blomkål",
-    "Rødkål",
-    "Rosenkål",
-    "Broccoli",
-    "Courgette, squash",
-    "Rabarber",
-    "Jordskokker, konsum",
-    "Bladselleri",
-    "Bladpersille",
-    "Purløg",
-    "Krydderurter (undtagen persille og purløg)",
-    "Kinakål",
-    "Fodermarvkål",
-    "Kålroer",
-    "Moskusgræskar",
-    "Centnergræskar",
-    "Mandelgræskar",
-    "Æbler",
-    "Pærer",
-    "Blomme med undervækst af græs",
-    "Blomme uden undervækst af græs",
-    "Sødkirsebør med undervækst af græs",
-    "Sødkirsebær uden undervækst af græs",
-    "Surkirsebær med undervækst af græs",
-    "Surkirsebær uden undervækst af græs",
-    "Blandet frugt",
-    "Anden træfrugt",
-    "Ribs",
-    "Solbær",
-    "Solbær, stiklingeopformering",
-    "Hindbær",
-    "Jordbær",
-    "Stikkelsbær",
-    "Surbær",
-    "Blåbær",
-    "Hyben",
-    "Rønnebær",
-    "Havtorn",
-    "Bærmispel",
-    "Storfrugtet tranebær",
-    "Vindrue",
-    "Spisedruer",
-    "Japan kvæde",
-    "Traekvæde",
-    "Hyld",
-    "Anden buskfrugt",
-    "Brombær",
-    "Hassel (Corylus maxima)",
-    "Hassel, træ (Corylus avellana)",
-    "Valnød (almindelig)",
-    "Kastanje (ægte)",
-    "Potteplanter",
-    "Blomsterløg",
-    "Snitblomster og snitgrønt",
-    "Planteskolekulturer, stauder",
-    "Planteskolekulturer, vedplanter, til videresalg",
-    "En- og to-arige planter",
-    "Stauder",
-    "Småplanter, en-årige",
-    "Medicinpl., en- og toårige",
-    "Medicinpl., stauder",
-    "Medicinpl., vedplanter",
-    "Svampe",
-    "Containerplads",
-    "Lukket system",
-    "Græs, rullegræs"
-  )
-  
-  "Energiafgrøder (andre), ha" = c(
-    "Elefantgraes",
-    "Rorgraes"
-  ),
-  
-  "Pil til energi, ha" = c(
-    "Pil"
-  ),
-  
-  "Majs til helsæd, ha" = c(
-    "Silomajs",
-    "Silomajs med graesudlaeg"
-  ),
-  
-  "Foderroer, ha" = c(
-    "Fodersukkerroer" 
-  ),
-  
-  "Sædskiftegræs, ha" = c(
-    "Graes uden klovergraes (omdrift)",
-    "Graes med klover/lucerne, under 50 % baelgpl. (omdrift)",
-    "Graes med klover/lucerne, under 50 % baelgpl. (omdrift) efterarsudlagt i vinterkorn til gronkorn",
-    "Graes med klover/lucerne, over 50 % baelgpl. (omdrift) efterarsudlagt i vinterkorn til gronkorn",
-    "Klovergraes, over 50% klover (omdrift)",
-    "Graes og klovergraes uden norm, under 50 % klover (omdrift)",
-    "Graes og klovergraes uden norm, over 50 % klover (omdrift)",
-    "Graes under 50% klover/lucerne, lavt udbytte (omdrift)",
-    "Graes  under 50% klover/lucerne, meget lavt udbytte (omdrift)",
-    "Graes under 50% klover/lucerne, ekstremt lavt udbytte (omdrift)",
-    "Lucernegraes, over 25% graes til slaet inkl. eget foder",
-    "Lucernegraes, over 50% lucerne (omdrift)",
-    "Lucerne, slaet",
-    "Klover til slaet",
-    "Graes med vikke og andre baelgplanter, under 50 % baelgpl.",
-    "Graes til udegrise, omdrift",
-    "Graes i omdrift, uden udbetaling af okologi-tilskud",
-    "Miljograes MVJ-tilsagn (0 N), omdrift"
-  ),
-  
-  "Helsæd, ha" = c(
-    "Varbyg, helsaed",
-    "Varhvede, helsaed",
-    "Varhavre, helsaed",
-    "Vinterrug, helsaed",
-    "Vinterbyg, helsaed",
-    "Vinterhvede, helsaed",
-    "Vintertriticale, helsaed",
-    "Blandkorn, varsaet, helsaed",
-    "AErtehelsaed",
-    "Korn og baelgsaed, helsaed, under 50% baelgsaed",
-    "Korn og baelgsaed, helsaed (over 50 % baelgsaed)"
-  ),
-  
-  "Grønkorn, ha" = c(
-    "Gronkorn af varbyg",
-    "Gronkorn af varhavre",
-    "Gronkorn af varrug",
-    "Gronkorn af varhvede",
-    "Gronkorn af vinterrug",
-    "Gronkorn af vinterhvede",
-    "Gronkorn af vinterbyg",
-    "Gronkorn af vintertriticale",
-    "Gronkorn af hybridrug",
-    "Gronkorn af vinterhavre",
-    "Blanding af varkorn, gronkorn",
-    "Blanding af vinterkorn, gronkorn",
-    "Korn og baelgsaed, gronkorn, under 50% baelgsaed"
-  ),
-  
-  "Vedvarende græs, ha" = c(
-    "Permanent graes, normalt udbytte",
-    "Permanent graes, under 50% klover/lucerne",
-    "Permanent graes, lavt udbytte",
-    "Permanent graes, meget lavt udbytte",
-    "Permanent graes, uden klover",
-    "Permanent graes, uden udbetaling af okologi-tilskud",
-    "Permanent klovergraes, over 50% klover/lucerne",
-    "Permanent graes og klovergraes uden norm, under 50 % klover",
-    "Permanent graes og klovergraes uden norm, over 50 % klover",
-    "Permanent lucerne og lucernegraes over 50% lucerne",
-    "Graes til udegrise, permanent",
-    "Honsegard, permanent graes"
-  ),
-  
-  "Kolbemajs, ha" = c(
-    "Sukkermajs",
-    "Sukkermajs med graesudlaeg",
-  ),  
-  
-  "Andet grovfoder, ha" = c(
-    "Fodergulerodder"
-  ),
-  
-  "Grøngødning økologisk, ha" = character(0),  # No direct match
-  
-  "20 årig udtagning (skov mv.), ha" = c(
-    "20-arig Udtagning med fastholdelse, ej landbrugsareal"
-  ),
-  
-  "Brak og bræmmer, ha" = c(
-    "Brak, slaning",
-    "Blomsterbrak",
-    "Bestoverbrak",
-    "Markbraemme, pa omdrift, slaning",
-    "Markbraemme, pa omdrift, med blomsterblanding",
-    "Brak langs vandlob og soer, slaning (alternativ til efterafgroder)"
-  ),
-  
-PG_24_Juletræer <- c(
-    "Juletræer og pyntegrønt",
-    "Pyntegrønt, økologisk jordbrug"
-  )
-  
-  "Permanent miljøgræs, ha" = c(
-    "Miljograes MVJ-tilsagn (0 N), permanent" 
-  ),
-  
-  "Skov, krat, hede, mose mv., ha" = c(
-    "Skovrejsning pa tidl. landbrugsjord 1",
-    "Skovrejsning pa tidl. landbrugsjord 3",
-    "Skovrejsning (privat) - forbedring af vandmiljo og grundvandsbeskyttelse",
-    "Skovrejsning (statslig) - forbedring af vandmiljo og grundvandsbeskyttelse",
-    "Skovrejsning (privat) ? kulstofbinding og grundvandsbeskyttelse",
-    "Skovrejsning, direktivimplementerende uden tilsagn ved Landbrugsstyrelsen",
-    "Skovrejsning i projektomrade, som ikke er omfattet af tilsagn",
-    "Klimaskovrejsning, national ordning ej Landbrugsstyrelsen",
-    "Offentlig skovrejsning",
-    "Lavskov",
-    "Anden skovdrift",
-    "Skovdrift med fjernelse af ved",
-    "Skov med biodiversitetsformal",
-    "Baeredygtig skovdrift",
-    "Baeredygtig skovdrift i Natura 2000-omrade",
-    "Lysabne arealer i skov",
-    "Skovlandbrug med omdriftsafgroder",
-    "Skovlandbrug med permanente afgroder",
-    "Skovlandbrug, ikke stotteberettiget",
-    "Poppel",
-    "Minivadomrader, projekttilsagn",
-    "Vadomrader med udtagning",
-    "Skovlandbrug med permanent graes",
-    "Skovlandbrug med graes i omdrift",
-  ),
-  
-  "Areal omlagt til økologisk drift, ha" = 
-    c( "Naturarealer, okologisk jordbrug" ),  
-  
-  "Andre," = c(
-    "Ikke stotteberettiget landbrugsareal",
-    "Ovrige afgroder",
-    "Intern kode: Bar jord",
-    "Rekreative formal",
-    "Honsegard uden plantedaekke",
-    "El",
-    "Klima-lavbundsprojekt, national ordning ej Landbrugsstyrelsen",
-    "Miljotiltag, ej landbrugsarealer",
-    "MVJ ej udtagning, ej landbrugsareal",
-    "MVJ-tilsagn, Udtagning, ej landbrugsareal"
-  ),  
-  
-  "Efterafgrøder miljø, ha" = character(0),
-  "Efterafgrøder, ha" = character(0),
-)
+#### nyt datasæt####
 
+
+dat2$Produktionsgren <- NA  # Start med tom kategori
+
+# Funktion til tildeling af kategori
+tildel_kategori<- function(afgroede) {
+  if (afgroede %in% PG_1_Vårbyg) return("PG_1_Vårbyg")
+  if (afgroede %in% PG_2_Vinterbyg) return("PG_2_Vinterbyg")
+  if (afgroede %in% PG_3_Hvede) return("PG_3_Hvede")
+  if (afgroede %in% PG_4_Rug_Triticale) return("PG_4_Rug_Triticale")
+  if (afgroede %in% PG_5_Havre) return("PG_5_Havre")
+  if (afgroede %in% PG_6_Sukkerroer_oa) return("PG_6_Sukkerroer_oa")
+  if (afgroede %in% PG_7_Frø) return("PG_7_Frø")
+  if (afgroede %in% PG_8_Kartofler) return("PG_8_Kartofler")
+  if (afgroede %in% PG_9_Raps_oa) return("PG_9_Raps_oa")
+  if (afgroede %in% PG_10_Bælgsæd) return("PG_10_Bælgsæd")
+  if (afgroede %in% PG_11_sædskiftegræs) return("PG_11_sædskiftegræs")
+  if (afgroede %in% PG_12_Andet_Foder_Energi) return("PG_12_Andet_Foder_Energi")
+  if (afgroede %in% PG_13_Vedvarendegræs) return("PG_13_Vedvarendegræs")
+  if (afgroede %in% PG_14_Majs) return("PG_14_Majs")
+  if (afgroede %in% PG_15_Brak_Bræmmer) return("PG_15_Brak_Bræmmer")
+  return(NA)
+}
+
+# Anvend funktionen på dat1$Afgrøde
+dat2$Produktionsgren <- sapply(dat2$Afgroede, tildel_kategori)
+
+# Fjern rækker med Afgrøde i Fjernes
+dat2 <- dat2[!dat2$Afgroede %in% Fjernes, ]
+
+# Tjek resultat
+head(dat2$Produktionsgren)
+  
+str(dat1)
 
 ####Overblik####
 # Frasortér afgrøder med mindre end 10 ha
